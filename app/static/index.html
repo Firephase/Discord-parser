@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Parser</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <h1>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7950f2" stroke-width="2">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+    </svg>
+    Discord Parser
+  </h1>
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusLabel" style="font-size:12px;color:var(--text-dim)">Disconnected</span>
+  <div class="header-meta">
+    <span id="wsStatus" style="font-size:11px">WS: disconnected</span>
+    <span id="unreadBadge" class="badge-count">0 unread</span>
+  </div>
+</header>
+
+<nav>
+  <button class="active" data-tab="messages">Messages <span id="msgTabCount"></span></button>
+  <button data-tab="keywords">Keywords</button>
+  <button data-tab="links">Links</button>
+  <button data-tab="status">Status</button>
+</nav>
+
+<main>
+
+  <!-- ── MESSAGES ── -->
+  <section class="tab active" id="tab-messages">
+    <div class="toolbar">
+      <input type="text" id="msgSearch" placeholder="Filter messages…">
+      <label class="toggle">
+        <input type="checkbox" id="unreadFilter">
+        <span class="toggle-track"></span>
+        Unread only
+      </label>
+      <button class="btn btn-ghost btn-sm" id="markAllBtn">Mark all read</button>
+      <button class="btn btn-danger btn-sm" id="clearAllBtn">Clear all</button>
+    </div>
+    <div id="msgList"></div>
+  </section>
+
+  <!-- ── KEYWORDS ── -->
+  <section class="tab" id="tab-keywords">
+    <div class="form-row">
+      <input type="text" id="kwInput" placeholder="Add keyword…">
+      <label class="toggle" style="white-space:nowrap">
+        <input type="checkbox" id="kwCaseSensitive">
+        <span class="toggle-track"></span>
+        Case-sensitive
+      </label>
+      <button class="btn btn-primary" id="kwAddBtn">Add</button>
+    </div>
+    <div id="kwList"></div>
+  </section>
+
+  <!-- ── LINKS ── -->
+  <section class="tab" id="tab-links">
+    <div class="form-row">
+      <input type="url" id="linkInput" placeholder="https://discord.gg/invite-code">
+      <button class="btn btn-primary" id="linkAddBtn">Connect</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px">
+      Paste a Discord invite link. The bot will attempt to join that server automatically.
+    </p>
+    <div id="linkList"></div>
+  </section>
+
+  <!-- ── STATUS ── -->
+  <section class="tab" id="tab-status">
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-label">Discord account</div>
+        <div class="stat-value" id="statUser">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Uptime</div>
+        <div class="stat-value" id="statUptime">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Servers</div>
+        <div class="stat-value" id="statGuilds">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">WS Clients</div>
+        <div class="stat-value" id="statWsClients">—</div>
+      </div>
+    </div>
+    <h3 style="margin-bottom:12px;color:#fff;font-size:14px">Connected servers</h3>
+    <div id="guildList"></div>
+    <div style="margin-top:24px">
+      <a href="/api/docs" target="_blank" class="btn btn-ghost btn-sm">API Docs (Swagger)</a>
+      &nbsp;
+      <a href="/api/redoc" target="_blank" class="btn btn-ghost btn-sm">ReDoc</a>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
