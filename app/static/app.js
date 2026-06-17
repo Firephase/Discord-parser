@@ -259,47 +259,63 @@ async function deleteKeyword(id) {
   toast('Keyword removed', 'success');
 }
 
-/* ─── Links (Servers) ───────────────────────────────────── */
+/* ─── Links ─────────────────────────────────────────────── */
 async function loadLinks() {
-  // Servers come from the status endpoint; also refresh invite URL
-  const s = await api('GET', '/status').catch(() => null);
-  if (!s) return;
-
-  const inviteInput = document.getElementById('inviteUrlDisplay');
-  const openBtn = document.getElementById('openInviteBtn');
-  if (s.invite_url) {
-    inviteInput.value = s.invite_url;
-    openBtn.href = s.invite_url;
-  } else {
-    inviteInput.value = '';
-    openBtn.href = '#';
-  }
-
-  state.links = s.guilds;
+  state.links = await api('GET', '/links').catch(e => { toast(e.message, 'error'); return []; });
   renderLinks();
 }
 
 function renderLinks() {
   const list = document.getElementById('linkList');
-  if (!state.links || state.links.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🔗</div>No servers yet.<br>Invite the bot using the link above.</div>';
+  if (state.links.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🔗</div>No links added yet.</div>';
     return;
   }
-  list.innerHTML = state.links.map(g => `
-  <div class="list-item">
-    <div>
-      <div class="list-item-name">${escHtml(g.name)}</div>
-      <div class="list-item-sub">ID: ${g.id} · ${g.member_count ?? '?'} members</div>
+  const statusMap = { active: 'Active', pending: 'Pending…', error: 'Error', invalid: 'Invalid', approval_required: 'Needs approval' };
+  list.innerHTML = state.links.map(l => `
+  <div class="list-item" id="link-${l.id}">
+    <div style="flex:1;min-width:0">
+      <div class="list-item-name">${l.guild_name ? escHtml(l.guild_name) : escHtml(l.invite_url)}</div>
+      <div class="list-item-sub">${escHtml(l.invite_url)}${l.error_message ? ' — ' + escHtml(l.error_message) : ''}</div>
     </div>
-    <span class="status-badge active">Active</span>
+    <span class="status-badge ${l.status}">${statusMap[l.status] || l.status}</span>
+    <button class="btn btn-ghost btn-sm" data-link-refresh="${l.id}" title="Re-check">↻</button>
+    <button class="btn btn-danger btn-sm btn-icon" data-link-del="${l.id}" title="Remove">✕</button>
   </div>`).join('');
+
+  list.querySelectorAll('[data-link-refresh]').forEach(btn => {
+    btn.addEventListener('click', () => refreshLink(+btn.dataset.linkRefresh));
+  });
+  list.querySelectorAll('[data-link-del]').forEach(btn => {
+    btn.addEventListener('click', () => deleteLink(+btn.dataset.linkDel));
+  });
 }
 
-document.getElementById('copyInviteBtn').addEventListener('click', () => {
-  const val = document.getElementById('inviteUrlDisplay').value;
-  if (!val) { toast('Connect the bot first to get the invite link', 'error'); return; }
-  navigator.clipboard.writeText(val).then(() => toast('Invite link copied!', 'success'));
-});
+document.getElementById('linkAddBtn').addEventListener('click', addLink);
+document.getElementById('linkInput').addEventListener('keydown', e => { if (e.key === 'Enter') addLink(); });
+
+async function addLink() {
+  const url = document.getElementById('linkInput').value.trim();
+  if (!url) return;
+  await api('POST', '/links', { invite_url: url })
+    .then(() => { document.getElementById('linkInput').value = ''; toast('Link added — joining server…', 'info'); })
+    .catch(e => toast(e.message, 'error'));
+  await loadLinks();
+}
+
+async function refreshLink(id) {
+  await api('POST', `/links/${id}/refresh`).catch(e => toast(e.message, 'error'));
+  toast('Re-checking link…', 'info');
+  await loadLinks();
+}
+
+async function deleteLink(id) {
+  await api('DELETE', `/links/${id}`).catch(e => { toast(e.message, 'error'); return; });
+  state.links = state.links.filter(l => l.id !== id);
+  document.getElementById('link-' + id)?.remove();
+  if (state.links.length === 0) renderLinks();
+  toast('Link removed', 'success');
+}
 
 /* ─── Status ─────────────────────────────────────────────── */
 async function loadStatus() {

@@ -1,3 +1,13 @@
+"""
+Discord self-bot client.
+
+Uses a user token (discord.py-self) so it can:
+  - listen to every channel the account already has access to
+  - join new servers via invite links
+
+WARNING: Self-bots violate Discord ToS. Use at your own risk.
+"""
+
 import asyncio
 import re
 from datetime import datetime
@@ -6,7 +16,7 @@ from typing import Optional
 import discord
 from sqlalchemy import select
 
-from app.database import AsyncSessionLocal, CapturedMessage, Keyword
+from app.database import AsyncSessionLocal, CapturedMessage, DiscordLink, Keyword
 from app.websocket_manager import manager as ws_manager
 
 
@@ -24,18 +34,13 @@ def extract_invite_code(url: str) -> str:
 
 class DiscordParser(discord.Client):
     def __init__(self) -> None:
-        intents = discord.Intents.default()
-        intents.message_content = True  # Privileged — enable in Dev Portal → Bot → Privileged Gateway Intents
-        intents.guilds = True
-        intents.guild_messages = True
-        super().__init__(intents=intents)
+        super().__init__()
         self._ready = asyncio.Event()
         self.start_time = datetime.utcnow()
 
     async def on_ready(self) -> None:
         self._ready.set()
         print(f"[discord] logged in as {self.user} ({self.user.id})")
-        print(f"[discord] in {len(self.guilds)} server(s)")
 
     async def on_error(self, event: str, *args, **kwargs) -> None:
         import traceback
@@ -103,11 +108,71 @@ class DiscordParser(discord.Client):
             }
         )
 
-    def invite_url(self) -> Optional[str]:
-        if not self.user:
-            return None
-        perms = discord.Permissions(view_channel=True, read_message_history=True)
-        return discord.utils.oauth_url(str(self.user.id), permissions=perms, scopes=("bot",))
+    # ── Invite operations ─────────────────────────────────────
+
+    async def check_invite(self, invite_url: str) -> dict:
+        code = extract_invite_code(invite_url)
+        try:
+            invite = await self.fetch_invite(code)
+            return {
+                "status": "valid",
+                "guild_id": str(invite.guild.id) if invite.guild else None,
+                "guild_name": invite.guild.name if invite.guild else None,
+            }
+        except discord.NotFound:
+            return {"status": "invalid", "error": "Invite not found or expired"}
+        except discord.Forbidden as exc:
+            return {"status": "error", "error": str(exc)}
+        except Exception as exc:
+            return {"status": "error", "error": str(exc)}
+
+    async def join_via_invite(self, invite_url: str, link_id: int) -> dict:
+        code = extract_invite_code(invite_url)
+        try:
+            invite = await self.fetch_invite(code)
+            if invite.guild and any(g.id == invite.guild.id for g in self.guilds):
+                result = {
+                    "status": "active",
+                    "guild_id": str(invite.guild.id),
+                    "guild_name": invite.guild.name,
+                }
+            else:
+                await invite.accept()
+                result = {
+                    "status": "active",
+                    "guild_id": str(invite.guild.id) if invite.guild else None,
+                    "guild_name": invite.guild.name if invite.guild else None,
+                }
+        except discord.NotFound:
+            result = {"status": "invalid", "error": "Invite not found or expired"}
+        except discord.Forbidden as exc:
+            msg = str(exc).lower()
+            if "verification" in msg or "captcha" in msg or "phone" in msg:
+                result = {"status": "approval_required", "error": str(exc)}
+            else:
+                result = {"status": "error", "error": str(exc)}
+        except Exception as exc:
+            result = {"status": "error", "error": str(exc)}
+
+        async with AsyncSessionLocal() as db:
+            link = await db.get(DiscordLink, link_id)
+            if link:
+                link.status = result["status"]
+                link.guild_id = result.get("guild_id")
+                link.guild_name = result.get("guild_name")
+                link.error_message = result.get("error")
+                link.last_checked = datetime.utcnow()
+                await db.commit()
+
+        return result
+
+    async def refresh_link(self, link_id: int) -> dict:
+        async with AsyncSessionLocal() as db:
+            link = await db.get(DiscordLink, link_id)
+            if not link:
+                return {"status": "error", "error": "Link not found"}
+            url = link.invite_url
+        return await self.join_via_invite(url, link_id)
 
     def status_info(self) -> dict:
         if not self._ready.is_set():
@@ -128,7 +193,7 @@ class DiscordParser(discord.Client):
                 for g in self.guilds
             ],
             "uptime_seconds": int((datetime.utcnow() - self.start_time).total_seconds()),
-            "invite_url": self.invite_url(),
+            "invite_url": None,
         }
 
 

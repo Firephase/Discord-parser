@@ -9,18 +9,25 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
 async def _validate_token(token: str) -> dict:
-    """Validate a Discord bot token against the API."""
+    """Validate a Discord user token against the API."""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://discord.com/api/v10/users/@me",
-                headers={"Authorization": f"Bot {token}"},
+                headers={"Authorization": token},
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
+                    if data.get("bot"):
+                        return {
+                            "valid": False,
+                            "error": "This is a bot token. You need a user token — see instructions below.",
+                        }
                     username = data.get("username", "")
-                    return {"valid": True, "user": username, "user_id": str(data["id"])}
+                    discriminator = data.get("discriminator", "0")
+                    display = f"{username}#{discriminator}" if discriminator != "0" else username
+                    return {"valid": True, "user": display, "user_id": str(data["id"])}
                 elif resp.status == 401:
                     return {"valid": False, "error": "Invalid token — Discord rejected it."}
                 else:

@@ -63,20 +63,13 @@
 
   <!-- ── LINKS ── -->
   <section class="tab" id="tab-links">
-    <div class="card" style="margin-bottom:20px">
-      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px">Add bot to a server</div>
-      <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px;line-height:1.7">
-        Bot tokens cannot join servers via invite links — a server admin must invite the bot via OAuth2.<br>
-        Copy the link below and send it to the admin of any server you want to monitor.
-      </p>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="inviteUrlDisplay" readonly placeholder="Connect the bot first…"
-          style="flex:1;background:var(--surface2);cursor:text">
-        <button class="btn btn-primary" id="copyInviteBtn">Copy</button>
-        <a id="openInviteBtn" href="#" target="_blank" class="btn btn-ghost">Open</a>
-      </div>
+    <div class="form-row">
+      <input type="url" id="linkInput" placeholder="https://discord.gg/invite-code">
+      <button class="btn btn-primary" id="linkAddBtn">Connect</button>
     </div>
-    <h3 style="margin-bottom:12px;color:#fff;font-size:13px;font-weight:600">Connected servers</h3>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px">
+      Paste a Discord invite link. The account will attempt to join that server automatically.
+    </p>
     <div id="linkList"></div>
   </section>
 
@@ -119,10 +112,10 @@
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
       <h2 style="color:#fff;font-size:20px;font-weight:700">Discord Parser</h2>
-      <p style="color:var(--text-dim);margin-top:6px;font-size:13px">Enter your Discord bot token to get started</p>
+      <p style="color:var(--text-dim);margin-top:6px;font-size:13px">Enter your Discord user token to get started</p>
     </div>
 
-    <label style="display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px">Discord Bot Token</label>
+    <label style="display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px">Discord User Token</label>
     <div style="position:relative;margin-bottom:8px">
       <input type="password" id="setupTokenInput" placeholder="Paste your token here…"
         style="width:100%;padding-right:44px">
@@ -136,13 +129,17 @@
     <button class="btn btn-primary" id="setupConnectBtn" style="width:100%;padding:10px">Connect</button>
 
     <details style="margin-top:20px">
-      <summary style="font-size:12px;color:var(--text-dim);cursor:pointer">How to get your bot token</summary>
+      <summary style="font-size:12px;color:var(--text-dim);cursor:pointer">How to get your user token</summary>
       <ol style="font-size:12px;color:var(--text-dim);margin-top:10px;padding-left:18px;line-height:2">
-        <li>Go to <strong style="color:var(--text)">discord.com/developers/applications</strong></li>
-        <li>Select your application → <strong style="color:var(--text)">Bot</strong> section</li>
-        <li>Click <strong style="color:var(--text)">Reset Token</strong> → copy the new token</li>
-        <li>Enable <strong style="color:var(--text)">Message Content Intent</strong> on the same page</li>
+        <li>Open <strong style="color:var(--text)">discord.com/app</strong> in your browser (logged in)</li>
+        <li>Press <strong style="color:var(--text)">F12</strong> → Network tab</li>
+        <li>Refresh the page or send any message</li>
+        <li>Click any request to <strong style="color:var(--text)">discord.com/api/…</strong></li>
+        <li>Find the <strong style="color:var(--text)">Authorization</strong> request header → copy its value</li>
       </ol>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:8px;padding:8px;background:rgba(250,176,5,.1);border-radius:4px;border:1px solid rgba(250,176,5,.2)">
+        ⚠ This is a user token, NOT from the Developer Portal. Self-bots violate Discord ToS.
+      </p>
     </details>
   </div>
 </div>
