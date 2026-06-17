@@ -210,5 +210,38 @@ class DiscordParser(discord.Client):
         }
 
 
-# Module-level singleton — populated by main.py on startup
+# ──────────────────────────────────────────────
+# Runtime client management
+# ──────────────────────────────────────────────
+
 discord_client: Optional[DiscordParser] = None
+_discord_task: Optional[asyncio.Task] = None
+
+
+async def start_discord(token: str) -> None:
+    """Start (or restart) the Discord client with a new token."""
+    global discord_client, _discord_task
+
+    if discord_client:
+        try:
+            await discord_client.close()
+        except Exception:
+            pass
+
+    if _discord_task and not _discord_task.done():
+        _discord_task.cancel()
+        try:
+            await asyncio.wait_for(asyncio.shield(_discord_task), timeout=5.0)
+        except (asyncio.CancelledError, asyncio.TimeoutError, Exception):
+            pass
+
+    client = DiscordParser()
+    discord_client = client
+
+    async def _run() -> None:
+        try:
+            await client.start(token)
+        except Exception as exc:
+            print(f"[discord] client stopped: {exc}")
+
+    _discord_task = asyncio.create_task(_run())

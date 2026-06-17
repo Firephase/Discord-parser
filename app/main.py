@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import select
 
-from app.config import settings
-from app.database import init_db
+from app.database import AppConfig, AsyncSessionLocal, init_db
 from app.websocket_manager import manager as ws_manager
 
 
@@ -14,28 +14,27 @@ from app.websocket_manager import manager as ws_manager
 async def lifespan(app: FastAPI):
     await init_db()
 
-    if not settings.discord_token:
-        print("[warn] DISCORD_TOKEN is not set — Discord client will not start")
+    # Load token from DB; fall back to env for backward-compat
+    from app.config import settings
+    from app.discord_client import start_discord
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(AppConfig).where(AppConfig.key == "discord_token"))
+        row = result.scalar_one_or_none()
+        token = row.value if row else None
+
+    if not token and settings.discord_token:
+        token = settings.discord_token
+        async with AsyncSessionLocal() as db:
+            db.add(AppConfig(key="discord_token", value=token))
+            await db.commit()
+
+    if token:
+        await start_discord(token)
     else:
-        import app.discord_client as dc_module
-
-        client = dc_module.DiscordParser()
-        dc_module.discord_client = client
-
-        async def _run():
-            try:
-                await client.start(settings.discord_token)
-            except Exception as exc:
-                print(f"[discord] client stopped: {exc}")
-
-        task = asyncio.create_task(_run())
+        print("[warn] No Discord token configured. Set it via the web UI.")
 
     yield
-
-    # Shutdown: cancel background discord task if running
-    for t in asyncio.all_tasks():
-        if t.get_name().startswith("Task-") and not t.done():
-            pass  # let discord.py-self handle its own cleanup
 
 
 app = FastAPI(
@@ -50,8 +49,9 @@ app = FastAPI(
 
 # ── REST routes ───────────────────────────────────────────────────────────────
 
-from app.api.routes import keywords, links, messages, status  # noqa: E402
+from app.api.routes import auth, keywords, links, messages, status  # noqa: E402
 
+app.include_router(auth.router)
 app.include_router(links.router)
 app.include_router(keywords.router)
 app.include_router(messages.router)
@@ -64,7 +64,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
         while True:
-            # Keep connection alive; client sends pings
             await websocket.receive_text()
     except WebSocketDisconnect:
         await ws_manager.disconnect(websocket)

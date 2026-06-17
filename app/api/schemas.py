@@ -78,6 +78,20 @@ class StatusOut(BaseModel):
     websocket_clients: int
 
 
+# ── Auth ───────────────────────────────────────────────────
+
+class TokenBody(BaseModel):
+    token: str
+
+class TokenSetOut(BaseModel):
+    ok: bool = True
+    user: str
+    user_id: str
+
+class TokenStatusOut(BaseModel):
+    has_token: bool
+
+
 # ── Generic ────────────────────────────────────────────────
 
 class OkResponse(BaseModel):

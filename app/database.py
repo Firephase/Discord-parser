@@ -58,6 +58,14 @@ class CapturedMessage(Base):
     captured_at = Column(DateTime, default=datetime.utcnow)
 
 
+class AppConfig(Base):
+    """Key-value store for runtime configuration (e.g. discord token)."""
+    __tablename__ = "app_config"
+
+    key = Column(String, primary_key=True)
+    value = Column(Text, nullable=False)
+
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session

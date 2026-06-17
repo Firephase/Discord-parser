@@ -358,6 +358,32 @@ label.toggle {
   to   { transform: translateX(0);    opacity: 1; }
 }
 
+/* ── Setup overlay ── */
+.setup-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 24px;
+}
+
+.setup-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 460px;
+}
+
+.setup-card input[type="password"],
+.setup-card input[type="text"] {
+  width: 100%;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

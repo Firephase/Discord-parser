@@ -95,14 +95,54 @@
     </div>
     <h3 style="margin-bottom:12px;color:#fff;font-size:14px">Connected servers</h3>
     <div id="guildList"></div>
-    <div style="margin-top:24px">
+    <div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap">
       <a href="/api/docs" target="_blank" class="btn btn-ghost btn-sm">API Docs (Swagger)</a>
-      &nbsp;
       <a href="/api/redoc" target="_blank" class="btn btn-ghost btn-sm">ReDoc</a>
+      <button class="btn btn-danger btn-sm" id="disconnectBtn">Disconnect / Change token</button>
     </div>
   </section>
 
 </main>
+
+<!-- ── SETUP OVERLAY ── -->
+<div id="setupOverlay" class="setup-overlay" style="display:none">
+  <div class="setup-card">
+    <div style="text-align:center;margin-bottom:28px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7950f2" stroke-width="1.5" style="margin-bottom:12px">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <h2 style="color:#fff;font-size:20px;font-weight:700">Discord Parser</h2>
+      <p style="color:var(--text-dim);margin-top:6px;font-size:13px">Enter your Discord user token to get started</p>
+    </div>
+
+    <label style="display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px">Discord User Token</label>
+    <div style="position:relative;margin-bottom:8px">
+      <input type="password" id="setupTokenInput" placeholder="Paste your token here…"
+        style="width:100%;padding-right:44px">
+      <button id="setupTokenToggle" class="btn btn-ghost btn-sm"
+        style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:12px">
+        Show
+      </button>
+    </div>
+    <div id="setupError" style="display:none;color:var(--red);font-size:12px;margin-bottom:12px;padding:8px 12px;background:rgba(240,62,62,.1);border-radius:6px;border:1px solid rgba(240,62,62,.3)"></div>
+
+    <button class="btn btn-primary" id="setupConnectBtn" style="width:100%;padding:10px">Connect</button>
+
+    <details style="margin-top:20px">
+      <summary style="font-size:12px;color:var(--text-dim);cursor:pointer">How to get your token</summary>
+      <ol style="font-size:12px;color:var(--text-dim);margin-top:10px;padding-left:18px;line-height:2">
+        <li>Open <strong style="color:var(--text)">discord.com/app</strong> in your browser</li>
+        <li>Press <strong style="color:var(--text)">F12</strong> to open DevTools → Network tab</li>
+        <li>Refresh the page or send any message</li>
+        <li>Click any request to <strong style="color:var(--text)">discord.com/api/…</strong></li>
+        <li>Find the <strong style="color:var(--text)">Authorization</strong> header → copy its value</li>
+      </ol>
+      <p style="font-size:11px;color:var(--text-dim);margin-top:8px;padding:8px;background:rgba(250,176,5,.1);border-radius:4px;border:1px solid rgba(250,176,5,.2)">
+        ⚠ Self-bots violate Discord ToS. Use only on accounts you own and at your own risk.
+      </p>
+    </details>
+  </div>
+</div>
 
 <div id="toast-container"></div>
 

@@ -331,6 +331,8 @@ async function loadStatus() {
   document.getElementById('statGuilds').textContent = s.guilds.length;
   document.getElementById('statWsClients').textContent = s.websocket_clients;
 
+  document.getElementById('disconnectBtn')?.addEventListener('click', disconnectToken);
+
   const gl = document.getElementById('guildList');
   if (s.guilds.length === 0) {
     gl.innerHTML = '<div class="empty" style="padding:24px">No servers connected</div>';
@@ -390,8 +392,77 @@ async function pollStatus() {
   }
 }
 
+/* ─── Setup overlay ─────────────────────────────────────── */
+const setupOverlay = document.getElementById('setupOverlay');
+const setupInput   = document.getElementById('setupTokenInput');
+const setupError   = document.getElementById('setupError');
+const setupBtn     = document.getElementById('setupConnectBtn');
+const setupToggle  = document.getElementById('setupTokenToggle');
+
+setupToggle.addEventListener('click', () => {
+  const isPassword = setupInput.type === 'password';
+  setupInput.type = isPassword ? 'text' : 'password';
+  setupToggle.textContent = isPassword ? 'Hide' : 'Show';
+});
+
+setupInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitToken(); });
+setupBtn.addEventListener('click', submitToken);
+
+async function submitToken() {
+  const token = setupInput.value.trim();
+  if (!token) return;
+
+  setupBtn.disabled = true;
+  setupBtn.textContent = 'Connecting…';
+  setupError.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/v1/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setupError.textContent = data.detail || 'Unknown error';
+      setupError.style.display = 'block';
+    } else {
+      setupInput.value = '';
+      hideSetup();
+      toast(`Connected as ${data.user}`, 'success');
+      await Promise.all([loadMessages(), loadKeywords(), loadLinks()]);
+      connectWs();
+      pollStatus();
+      setInterval(pollStatus, 10000);
+    }
+  } catch (e) {
+    setupError.textContent = 'Network error — is the server running?';
+    setupError.style.display = 'block';
+  } finally {
+    setupBtn.disabled = false;
+    setupBtn.textContent = 'Connect';
+  }
+}
+
+function showSetup() { setupOverlay.style.display = 'flex'; }
+function hideSetup() { setupOverlay.style.display = 'none'; }
+
+async function disconnectToken() {
+  if (!confirm('Disconnect from Discord and remove the saved token?')) return;
+  await api('DELETE', '/auth/token').catch(e => toast(e.message, 'error'));
+  toast('Disconnected', 'info');
+  showSetup();
+}
+
 /* ─── Init ───────────────────────────────────────────────── */
 (async () => {
+  // Check if a token is already saved; if not, show setup screen
+  const tokenStatus = await fetch('/api/v1/auth/token/status').then(r => r.json()).catch(() => ({ has_token: false }));
+  if (!tokenStatus.has_token) {
+    showSetup();
+    return; // Don't load main app until connected
+  }
+
   await Promise.all([loadMessages(), loadKeywords(), loadLinks()]);
   connectWs();
   pollStatus();
