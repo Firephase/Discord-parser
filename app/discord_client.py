@@ -197,7 +197,7 @@ class DiscordParser(discord.Client):
 
     def status_info(self) -> dict:
         if not self._ready.is_set():
-            return {"connected": False, "user": None, "guilds": [], "uptime_seconds": 0}
+            return {"connected": False, "user": None, "user_id": None, "guilds": [], "uptime_seconds": 0}
         return {
             "connected": True,
             "user": str(self.user),
