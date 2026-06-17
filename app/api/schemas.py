@@ -76,6 +76,7 @@ class StatusOut(BaseModel):
     guilds: list[dict[str, Any]]
     uptime_seconds: int
     websocket_clients: int
+    invite_url: Optional[str] = None
 
 
 # ── Auth ───────────────────────────────────────────────────

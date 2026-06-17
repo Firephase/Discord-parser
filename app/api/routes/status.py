@@ -19,6 +19,7 @@ async def get_status():
             "user_id": None,
             "guilds": [],
             "uptime_seconds": 0,
+            "invite_url": None,
         }
 
     return StatusOut(
