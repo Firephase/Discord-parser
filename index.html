@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barbie Dress-Up Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #ff9de2 0%, #ffb3de 30%, #c9b8ff 70%, #a8d8ff 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h1 {
+    color: #fff;
+    text-shadow: 0 2px 8px #c060a0;
+    font-size: 2.2rem;
+    margin: 18px 0 8px;
+    letter-spacing: 2px;
+  }
+
+  .game-area {
+    display: flex;
+    gap: 18px;
+    padding: 10px;
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 200px;
+    flex-shrink: 0;
+  }
+
+  /* ── BARBIE STAGE ── */
+  .stage {
+    background: linear-gradient(180deg, #ffe0f7 0%, #ffd6f0 60%, #e8c8f8 100%);
+    border-radius: 20px;
+    border: 3px solid #f090c8;
+    box-shadow: 0 8px 32px #e080c040;
+    width: 320px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 10px;
+  }
+
+  .stage-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 30% at 50% 100%, #f8b4e0 0%, transparent 70%),
+      linear-gradient(180deg, #fff5fd 0%, #fce4f5 100%);
+    z-index: 0;
+  }
+
+  .stage-floor {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(180deg, #f0c0e8 0%, #e8a8d8 100%);
+    border-radius: 0 0 17px 17px;
+    z-index: 1;
+  }
+
+  .barbie-container {
+    position: relative;
+    z-index: 2;
+    margin-top: 10px;
+    width: 180px;
+    height: 460px;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 200px;
+    flex-shrink: 0;
+  }
+
+  /* ── CATEGORY TABS ── */
+  .panel-card {
+    background: rgba(255,255,255,0.82);
+    border-radius: 14px;
+    border: 2px solid #f8c0e0;
+    box-shadow: 0 4px 16px #e070b020;
+    padding: 10px;
+  }
+
+  .panel-card h3 {
+    font-size: 0.82rem;
+    color: #c060a0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .skin-swatches {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .skin-swatch {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform .2s, border-color .2s;
+  }
+  .skin-swatch:hover { transform: scale(1.15); }
+  .skin-swatch.active { border-color: #c060a0; }
+
+  .category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+
+  .cat-btn {
+    padding: 4px 8px;
+    border: 2px solid #e090c8;
+    background: #fff0f8;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    color: #a050a0;
+    transition: all .2s;
+  }
+  .cat-btn:hover, .cat-btn.active {
+    background: #f060b0;
+    color: #fff;
+    border-color: #f060b0;
+  }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .item-grid::-webkit-scrollbar { width: 4px; }
+  .item-grid::-webkit-scrollbar-thumb { background: #f090c8; border-radius: 4px; }
+
+  .item-btn {
+    background: #fff8fd;
+    border: 2px solid #f0c0e0;
+    border-radius: 10px;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.65rem;
+    color: #904070;
+    transition: all .2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .item-btn:hover { border-color: #f060b0; background: #fde8f8; transform: translateY(-2px); }
+  .item-btn.active { border-color: #f060b0; background: #ffd6f0; }
+  .item-btn .icon { font-size: 1.5rem; }
+  .item-btn .label { font-size: 0.58rem; line-height: 1.2; }
+
+  .action-btns {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-reset, .btn-save {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: bold;
+    transition: all .2s;
+  }
+  .btn-reset { background: #ff8fc8; color: #fff; }
+  .btn-reset:hover { background: #e060a0; }
+  .btn-save { background: #a060f0; color: #fff; }
+  .btn-save:hover { background: #8040d0; }
+
+  /* ── SVG BARBIE ── */
+  svg.barbie { width: 100%; height: 100%; }
+
+  /* Clothing layer visibility */
+  .cloth-layer { display: none; }
+  .cloth-layer.visible { display: block; }
+</style>
+</head>
+<body>
+
+<h1>✨ Barbie Dress-Up ✨</h1>
+
+<div class="game-area">
+
+  <!-- LEFT PANEL: Skin + Dresses -->
+  <div class="left-panel">
+
+    <div class="panel-card">
+      <h3>Skin Tone</h3>
+      <div class="skin-swatches">
+        <div class="skin-swatch active" style="background:#FDDBB4;" data-skin="light" title="Light"></div>
+        <div class="skin-swatch" style="background:#F5C599;" data-skin="medium-light" title="Medium Light"></div>
+        <div class="skin-swatch" style="background:#D4956A;" data-skin="medium" title="Medium"></div>
+        <div class="skin-swatch" style="background:#A0674B;" data-skin="medium-dark" title="Medium Dark"></div>
+        <div class="skin-swatch" style="background:#6B3A2A;" data-skin="dark" title="Dark"></div>
+        <div class="skin-swatch" style="background:#3D1F10;" data-skin="deep" title="Deep"></div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h3>Dresses</h3>
+      <div class="category-tabs">
+        <button class="cat-btn active" data-dress-cat="pakistani">🇵🇰 Pak</button>
+        <button class="cat-btn" data-dress-cat="american">🇺🇸 USA</button>
+        <button class="cat-btn" data-dress-cat="russian">🇷🇺 Rus</button>
+      </div>
+      <div class="item-grid" id="dress-grid"></div>
+    </div>
+
+    <div class="panel-card">
+      <h3>Hair</h3>
+      <div class="item-grid" id="hair-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- STAGE -->
+  <div class="stage">
+    <div class="stage-bg"></div>
+    <div class="stage-floor"></div>
+    <div class="barbie-container">
+      <svg class="barbie" viewBox="0 0 180 460" xmlns="http://www.w3.org/2000/svg" id="barbie-svg">
+        <defs>
+          <radialGradient id="faceGrad" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="var(--skin-highlight, #FEEECE)"/>
+            <stop offset="100%" stop-color="var(--skin-color, #FDDBB4)"/>
+          </radialGradient>
+          <radialGradient id="bodyGrad" cx="50%" cy="30%" r="60%">
+            <stop offset="0%" stop-color="var(--skin-highlight, #FEEECE)"/>
+            <stop offset="100%" stop-color="var(--skin-color, #FDDBB4)"/>
+          </radialGradient>
+          <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#d060a0" flood-opacity="0.25"/>
+          </filter>
+        </defs>
+
+        <!-- ── BODY BASE ── -->
+        <g id="body-base" filter="url(#soft-shadow)">
+          <!-- Neck -->
+          <rect x="82" y="130" width="16" height="22" rx="6" fill="url(#faceGrad)"/>
+
+          <!-- Torso -->
+          <path d="M58 152 Q55 170 54 190 Q52 215 58 230 Q68 240 90 242 Q112 240 122 230 Q128 215 126 190 Q125 170 122 152 Q110 148 90 148 Q70 148 58 152Z" fill="url(#bodyGrad)"/>
+
+          <!-- Waist -->
+          <ellipse cx="90" cy="232" rx="28" ry="10" fill="url(#bodyGrad)"/>
+
+          <!-- Hips -->
+          <path d="M62 238 Q55 255 54 275 Q90 282 126 275 Q125 255 118 238 Q104 244 90 244 Q76 244 62 238Z" fill="url(#bodyGrad)"/>
+
+          <!-- Left upper arm -->
+          <path d="M58 155 Q42 165 36 185 Q34 195 38 200 Q44 202 50 198 Q56 182 62 170Z" fill="url(#bodyGrad)" rx="8"/>
+          <!-- Left lower arm -->
+          <path d="M38 200 Q32 218 34 235 Q36 242 42 242 Q48 240 50 234 Q50 218 50 198Z" fill="url(#bodyGrad)"/>
+          <!-- Left hand -->
+          <ellipse cx="42" cy="244" rx="8" ry="10" fill="url(#faceGrad)"/>
+
+          <!-- Right upper arm -->
+          <path d="M122 155 Q138 165 144 185 Q146 195 142 200 Q136 202 130 198 Q124 182 118 170Z" fill="url(#bodyGrad)"/>
+          <!-- Right lower arm -->
+          <path d="M142 200 Q148 218 146 235 Q144 242 138 242 Q132 240 130 234 Q130 218 130 198Z" fill="url(#bodyGrad)"/>
+          <!-- Right hand -->
+          <ellipse cx="138" cy="244" rx="8" ry="10" fill="url(#faceGrad)"/>
+
+          <!-- Left leg upper -->
+          <path d="M62 272 Q56 295 56 320 Q56 335 62 338 Q72 342 78 338 Q84 335 82 320 Q80 295 78 272Z" fill="url(#bodyGrad)"/>
+          <!-- Left leg lower -->
+          <path d="M56 320 Q54 345 54 370 Q54 385 60 390 Q68 394 76 390 Q82 385 82 370 Q82 345 78 338Z" fill="url(#bodyGrad)"/>
+          <!-- Left foot -->
+          <path d="M54 388 Q50 395 48 400 Q52 405 64 404 Q76 404 82 398 Q82 392 76 390Z" fill="url(#bodyGrad)"/>
+
+          <!-- Right leg upper -->
+          <path d="M118 272 Q124 295 124 320 Q124 335 118 338 Q108 342 102 338 Q96 335 98 320 Q100 295 102 272Z" fill="url(#bodyGrad)"/>
+          <!-- Right leg lower -->
+          <path d="M124 320 Q126 345 126 370 Q126 385 120 390 Q112 394 104 390 Q98 385 98 370 Q98 345 102 338Z" fill="url(#bodyGrad)"/>
+          <!-- Right foot -->
+          <path d="M126 388 Q130 395 132 400 Q128 405 116 404 Q104 404 98 398 Q98 392 104 390Z" fill="url(#bodyGrad)"/>
+        </g>
+
+        <!-- ── FACE ── -->
+        <g id="face-group">
+          <!-- Head shape -->
+          <ellipse cx="90" cy="90" rx="44" ry="50" fill="url(#faceGrad)" filter="url(#soft-shadow)"/>
+          <!-- Chin refinement -->
+          <ellipse cx="90" cy="128" rx="28" ry="14" fill="url(#faceGrad)"/>
+
+          <!-- Ears -->
+          <ellipse cx="47" cy="94" rx="7" ry="9" fill="url(#faceGrad)"/>
+          <ellipse cx="133" cy="94" rx="7" ry="9" fill="url(#faceGrad)"/>
+
+          <!-- Eyebrows -->
+          <path d="M66 72 Q74 68 82 70" stroke="#7a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M98 70 Q106 68 114 72" stroke="#7a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Eyes whites -->
+          <ellipse cx="75" cy="84" rx="11" ry="9" fill="white"/>
+          <ellipse cx="105" cy="84" rx="11" ry="9" fill="white"/>
+          <!-- Irises -->
+          <circle cx="75" cy="85" r="7" fill="#5b8fd6" id="left-iris"/>
+          <circle cx="105" cy="85" r="7" fill="#5b8fd6" id="right-iris"/>
+          <!-- Pupils -->
+          <circle cx="75" cy="86" r="4" fill="#1a1a2e"/>
+          <circle cx="105" cy="86" r="4" fill="#1a1a2e"/>
+          <!-- Eye shine -->
+          <circle cx="77" cy="83" r="2" fill="white" opacity="0.9"/>
+          <circle cx="107" cy="83" r="2" fill="white" opacity="0.9"/>
+          <!-- Eyelashes top -->
+          <path d="M64 78 Q75 74 86 78" stroke="#2a1a1a" stroke-width="2" fill="none"/>
+          <path d="M94 78 Q105 74 116 78" stroke="#2a1a1a" stroke-width="2" fill="none"/>
+
+          <!-- Nose -->
+          <path d="M87 100 Q90 108 93 100" stroke="var(--skin-shadow,#e8a880)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <circle cx="87" cy="104" r="1.5" fill="var(--skin-shadow,#e8a880)" opacity="0.5"/>
+          <circle cx="93" cy="104" r="1.5" fill="var(--skin-shadow,#e8a880)" opacity="0.5"/>
+
+          <!-- Lips (default) -->
+          <path id="lips" d="M78 114 Q84 110 90 112 Q96 110 102 114 Q96 122 90 124 Q84 122 78 114Z" fill="#e8607a"/>
+          <path d="M78 114 Q84 116 90 114 Q96 116 102 114" stroke="#c04060" stroke-width="1" fill="none"/>
+          <!-- Cheeks -->
+          <ellipse cx="62" cy="100" rx="10" ry="7" fill="#ffb0b0" opacity="0.35" id="left-blush"/>
+          <ellipse cx="118" cy="100" rx="10" ry="7" fill="#ffb0b0" opacity="0.35" id="right-blush"/>
+        </g>
+
+        <!-- ── CLOTHING LAYERS (shown/hidden by JS) ── -->
+
+        <!-- PAKISTANI 1: Lehenga (pink) -->
+        <g class="cloth-layer" id="dress-pk1">
+          <!-- Choli top -->
+          <path d="M58 152 Q55 175 56 190 Q68 196 90 196 Q112 196 124 190 Q125 175 122 152 Q110 148 90 148 Q70 148 58 152Z" fill="#d4186c"/>
+          <!-- Dupatta drape left arm -->
+          <path d="M36 160 Q28 170 24 190 Q22 200 30 205 Q38 205 44 195 Q48 178 56 165Z" fill="#e84090" opacity="0.8"/>
+          <!-- Dupatta over shoulder -->
+          <path d="M56 152 Q44 148 36 158 Q28 168 34 178 Q48 162 58 158Z" fill="#e84090" opacity="0.9"/>
+          <!-- Dupatta tail right -->
+          <path d="M122 152 Q140 148 148 158 Q156 170 148 180 Q136 166 124 160Z" fill="#e84090" opacity="0.9"/>
+          <!-- Ghagra skirt -->
+          <path d="M54 235 Q42 255 38 285 Q34 320 36 360 Q50 370 90 372 Q130 370 144 360 Q146 320 142 285 Q138 255 126 235 Q108 244 90 244 Q72 244 54 235Z" fill="#d4186c"/>
+          <!-- Ghagra bottom frill -->
+          <path d="M36 360 Q42 372 52 376 Q70 380 90 380 Q110 380 128 376 Q138 372 144 360 Q130 368 90 370 Q50 368 36 360Z" fill="#f040a0"/>
+          <!-- Embroidery pattern on skirt -->
+          <g fill="none" stroke="#ffd700" stroke-width="1.5" opacity="0.7">
+            <path d="M55 260 Q70 255 80 265 Q90 255 100 265 Q110 255 125 260"/>
+            <path d="M52 280 Q70 275 80 285 Q90 275 100 285 Q110 275 128 280"/>
+            <circle cx="90" cy="250" r="4" fill="#ffd700" stroke="none"/>
+            <circle cx="70" cy="270" r="3" fill="#ffd700" stroke="none"/>
+            <circle cx="110" cy="270" r="3" fill="#ffd700" stroke="none"/>
+          </g>
+          <!-- Embroidery on choli -->
+          <g fill="none" stroke="#ffd700" stroke-width="1.2" opacity="0.8">
+            <path d="M68 162 Q90 158 112 162"/>
+            <circle cx="90" cy="172" r="3" fill="#ffd700" stroke="none"/>
+          </g>
+        </g>
+
+        <!-- PAKISTANI 2: Shalwar Kameez (teal) -->
+        <g class="cloth-layer" id="dress-pk2">
+          <!-- Kameez body -->
+          <path d="M52 148 Q46 170 44 200 Q44 230 54 245 Q70 252 90 252 Q110 252 126 245 Q136 230 136 200 Q134 170 128 148 Q110 143 90 143 Q70 143 52 148Z" fill="#1a9e9e"/>
+          <!-- Kameez collar V-neck -->
+          <path d="M78 148 Q90 160 102 148" stroke="#0d7070" stroke-width="2" fill="#1a9e9e"/>
+          <!-- Kameez sleeves -->
+          <path d="M52 148 Q36 156 28 180 Q26 195 34 200 Q44 196 50 182 Q54 165 58 152Z" fill="#1a9e9e"/>
+          <path d="M128 148 Q144 156 152 180 Q154 195 146 200 Q136 196 130 182 Q126 165 122 152Z" fill="#1a9e9e"/>
+          <!-- Embroidery neckline -->
+          <g stroke="#ffd700" stroke-width="1.5" fill="none" opacity="0.9">
+            <path d="M74 150 Q90 162 106 150"/>
+            <path d="M70 158 Q90 168 110 158"/>
+          </g>
+          <!-- Shalwar -->
+          <path d="M58 248 Q54 270 54 300 Q54 330 56 360 Q66 366 78 364 Q82 340 84 310 Q86 290 90 280 Q94 290 96 310 Q98 340 102 364 Q114 366 124 360 Q126 330 126 300 Q126 270 122 248 Q106 255 90 255 Q74 255 58 248Z" fill="#1a9e9e"/>
+          <!-- Kameez bottom hem -->
+          <path d="M54 245 Q54 252 58 255 Q72 258 90 258 Q108 258 122 255 Q126 252 126 245" fill="#0d7070"/>
+          <!-- Embroidery bottom hem -->
+          <g stroke="#ffd700" stroke-width="1" fill="none" opacity="0.8">
+            <path d="M56 246 Q90 250 124 246"/>
+            <path d="M58 252 Q90 256 122 252"/>
+          </g>
+          <!-- Dupatta -->
+          <path d="M44 148 Q36 155 30 168 Q26 180 34 185 Q50 168 62 156Z" fill="#15c0c0" opacity="0.85"/>
+          <path d="M136 148 Q144 155 150 168 Q154 180 146 185 Q130 168 118 156Z" fill="#15c0c0" opacity="0.85"/>
+        </g>
+
+        <!-- PAKISTANI 3: Saree style (red gold) -->
+        <g class="cloth-layer" id="dress-pk3">
+          <!-- Saree blouse -->
+          <path d="M62 152 Q60 170 62 185 Q70 192 90 192 Q110 192 118 185 Q120 170 118 152 Q104 148 90 148 Q76 148 62 152Z" fill="#8b0000"/>
+          <!-- Saree drape -->
+          <path d="M56 185 Q44 200 38 225 Q36 245 42 260 Q56 238 62 210 Q66 195 70 186Z" fill="#cc0000" opacity="0.9"/>
+          <path d="M38 255 Q32 280 34 310 Q36 335 42 350 Q52 330 56 300 Q58 270 50 255Z" fill="#cc0000" opacity="0.85"/>
+          <!-- Saree main drape -->
+          <path d="M62 190 Q54 235 54 275 Q54 320 56 360 Q70 368 90 370 Q110 368 124 360 Q126 320 126 275 Q126 235 118 190 Q104 198 90 198 Q76 198 62 190Z" fill="#cc0000"/>
+          <!-- Golden border -->
+          <path d="M54 356 Q70 366 90 368 Q110 366 126 356" stroke="#ffd700" stroke-width="4" fill="none"/>
+          <path d="M56 346 Q72 356 90 358 Q108 356 124 346" stroke="#ffd700" stroke-width="2" fill="none"/>
+          <!-- Pallu (end piece) -->
+          <path d="M116 185 Q128 175 140 168 Q150 162 155 152 Q148 148 140 155 Q130 165 120 174Z" fill="#cc0000"/>
+          <!-- Gold embroidery -->
+          <g stroke="#ffd700" stroke-width="1.5" fill="none" opacity="0.85">
+            <path d="M66 200 Q90 196 114 200"/>
+            <circle cx="90" cy="210" r="3" fill="#ffd700" stroke="none"/>
+            <path d="M60 220 Q90 216 120 220"/>
+          </g>
+        </g>
+
+        <!-- AMERICAN 1: Red party dress -->
+        <g class="cloth-layer" id="dress-us1">
+          <!-- Strapless bodice -->
+          <path d="M66 148 Q62 165 62 185 Q68 194 90 196 Q112 194 118 185 Q118 165 114 148 Q102 145 90 145 Q78 145 66 148Z" fill="#e82030"/>
+          <!-- Sweetheart neckline -->
+          <path d="M66 150 Q78 145 90 150 Q102 145 114 150 Q102 148 90 152 Q78 148 66 150Z" fill="#c81820"/>
+          <!-- Flared skirt -->
+          <path d="M60 194 Q42 220 36 260 Q32 300 36 345 Q52 360 90 364 Q128 360 144 345 Q148 300 144 260 Q138 220 120 194 Q104 200 90 200 Q76 200 60 194Z" fill="#e82030"/>
+          <!-- Skirt layered frill -->
+          <path d="M34 340 Q52 358 90 362 Q128 358 146 340 Q130 352 90 356 Q50 352 34 340Z" fill="#ff4060"/>
+          <path d="M32 320 Q50 338 90 342 Q130 338 148 320 Q132 332 90 336 Q48 332 32 320Z" fill="#ff4060" opacity="0.6"/>
+          <!-- Belt/waist accent -->
+          <path d="M62 192 Q76 198 90 200 Q104 198 118 192 Q104 196 90 196 Q76 196 62 192Z" fill="#b01020"/>
+          <!-- Sparkle details -->
+          <g fill="#fff" opacity="0.6">
+            <circle cx="80" cy="168" r="1.5"/>
+            <circle cx="90" cy="162" r="1.5"/>
+            <circle cx="100" cy="168" r="1.5"/>
+            <circle cx="75" cy="178" r="1"/>
+            <circle cx="105" cy="178" r="1"/>
+          </g>
+        </g>
+
+        <!-- AMERICAN 2: Blue jeans + crop top -->
+        <g class="cloth-layer" id="dress-us2">
+          <!-- Crop top -->
+          <path d="M58 148 Q54 165 56 182 Q68 190 90 190 Q112 190 124 182 Q126 165 122 148 Q110 144 90 144 Q70 144 58 148Z" fill="#4060e8"/>
+          <!-- Top straps -->
+          <rect x="77" y="143" width="8" height="12" rx="3" fill="#3050d0"/>
+          <rect x="95" y="143" width="8" height="12" rx="3" fill="#3050d0"/>
+          <!-- Top pattern stars -->
+          <g fill="white" opacity="0.5">
+            <polygon points="90,155 92,161 98,161 93,165 95,171 90,167 85,171 87,165 82,161 88,161" transform="scale(0.4) translate(135,230)"/>
+          </g>
+          <!-- Sleeves -->
+          <path d="M58 150 Q44 158 38 176 Q36 186 40 190 Q48 192 54 186 Q58 172 60 158Z" fill="#4060e8"/>
+          <path d="M122 150 Q136 158 142 176 Q144 186 140 190 Q132 192 126 186 Q122 172 120 158Z" fill="#4060e8"/>
+          <!-- Jeans waistband -->
+          <rect x="56" y="228" width="68" height="14" rx="4" fill="#1a2a6c"/>
+          <!-- Jeans -->
+          <path d="M56 240 Q52 265 52 295 Q52 325 54 355 Q62 362 74 360 Q80 335 82 305 Q84 285 90 275 Q96 285 98 305 Q100 335 106 360 Q118 362 126 355 Q128 325 128 295 Q128 265 124 240Z" fill="#2040a0"/>
+          <!-- Jean seams -->
+          <path d="M90 275 Q90 310 90 360" stroke="#1a3080" stroke-width="1.5" fill="none"/>
+          <!-- Belt loops -->
+          <g fill="#1a2a6c">
+            <rect x="66" y="228" width="5" height="4" rx="1"/>
+            <rect x="80" y="228" width="5" height="4" rx="1"/>
+            <rect x="95" y="228" width="5" height="4" rx="1"/>
+            <rect x="109" y="228" width="5" height="4" rx="1"/>
+          </g>
+          <!-- Belt buckle -->
+          <rect x="86" y="229" width="8" height="8" rx="2" fill="#ffd700"/>
+        </g>
+
+        <!-- AMERICAN 3: White wedding/prom -->
+        <g class="cloth-layer" id="dress-us3">
+          <!-- Corset bodice -->
+          <path d="M66 148 Q62 168 64 185 Q72 196 90 198 Q108 196 116 185 Q118 168 114 148 Q102 144 90 144 Q78 144 66 148Z" fill="#f8f0ff"/>
+          <!-- Off-shoulder straps -->
+          <path d="M66 148 Q52 145 42 150 Q36 158 40 168 Q50 162 60 156Z" fill="#f8f0ff"/>
+          <path d="M114 148 Q128 145 138 150 Q144 158 140 168 Q130 162 120 156Z" fill="#f8f0ff"/>
+          <!-- Ball gown skirt -->
+          <path d="M62 196 Q40 225 32 270 Q26 315 30 355 Q52 372 90 375 Q128 372 150 355 Q154 315 148 270 Q140 225 118 196 Q104 204 90 204 Q76 204 62 196Z" fill="#f8f0ff"/>
+          <!-- Tulle layers -->
+          <path d="M28 350 Q52 370 90 373 Q128 370 152 350 Q130 364 90 367 Q50 364 28 350Z" fill="#e8e0ff" opacity="0.7"/>
+          <path d="M30 330 Q54 350 90 353 Q126 350 150 330 Q128 344 90 347 Q52 344 30 330Z" fill="#e8e0ff" opacity="0.5"/>
+          <!-- Lace detail bodice -->
+          <g stroke="#d0c0e8" stroke-width="1" fill="none" opacity="0.8">
+            <path d="M70 155 Q90 151 110 155"/>
+            <path d="M68 163 Q90 159 112 163"/>
+            <path d="M67 171 Q90 167 113 171"/>
+          </g>
+          <!-- Flower accent -->
+          <circle cx="90" cy="196" r="6" fill="#f0d0f8"/>
+          <circle cx="90" cy="196" r="3" fill="#e090d0"/>
+          <!-- Sparkles -->
+          <g fill="#c090e0" opacity="0.8">
+            <circle cx="70" cy="220" r="2"/>
+            <circle cx="85" cy="230" r="1.5"/>
+            <circle cx="110" cy="215" r="2"/>
+            <circle cx="100" cy="235" r="1.5"/>
+          </g>
+        </g>
+
+        <!-- RUSSIAN 1: Sarafan (sundress) folk -->
+        <g class="cloth-layer" id="dress-ru1">
+          <!-- Sarafan body -->
+          <path d="M66 148 Q58 170 56 200 Q54 240 54 280 Q54 325 56 360 Q72 370 90 372 Q108 370 124 360 Q126 325 126 280 Q126 240 124 200 Q122 170 114 148 Q102 143 90 143 Q78 143 66 148Z" fill="#c8202a"/>
+          <!-- Shoulder straps -->
+          <rect x="75" y="136" width="9" height="20" rx="4" fill="#c8202a"/>
+          <rect x="96" y="136" width="9" height="20" rx="4" fill="#c8202a"/>
+          <!-- White undershirt sleeves -->
+          <path d="M66 148 Q52 152 40 168 Q34 182 38 194 Q48 196 56 188 Q60 172 68 158Z" fill="#f0e8d8"/>
+          <path d="M114 148 Q128 152 140 168 Q146 182 142 194 Q132 196 124 188 Q120 172 112 158Z" fill="#f0e8d8"/>
+          <!-- Folk embroidery pattern -->
+          <g fill="none" stroke="#ffd700" stroke-width="2" opacity="0.9">
+            <path d="M58 190 Q72 184 82 192 Q90 184 98 192 Q108 184 122 190"/>
+            <path d="M56 205 Q72 199 82 207 Q90 199 98 207 Q108 199 124 205"/>
+          </g>
+          <!-- Red geometric pattern bottom -->
+          <g fill="#ffd700" opacity="0.8">
+            <rect x="58" y="350" width="8" height="8" rx="1"/>
+            <rect x="74" y="350" width="8" height="8" rx="1"/>
+            <rect x="90" y="350" width="8" height="8" rx="1"/>
+            <rect x="106" y="350" width="8" height="8" rx="1"/>
+            <rect x="120" y="350" width="8" height="8" rx="1"/>
+          </g>
+          <!-- White undershirt visible -->
+          <path d="M60 142 Q70 136 80 138 Q90 134 100 138 Q110 136 120 142" stroke="#f0e8d8" stroke-width="3" fill="none"/>
+        </g>
+
+        <!-- RUSSIAN 2: Military-inspired coat -->
+        <g class="cloth-layer" id="dress-ru2">
+          <!-- Coat body -->
+          <path d="M54 142 Q46 168 44 200 Q44 235 48 260 Q60 270 90 272 Q120 270 132 260 Q136 235 136 200 Q134 168 126 142 Q110 138 90 138 Q70 138 54 142Z" fill="#3a4a2e"/>
+          <!-- Coat collar -->
+          <path d="M70 142 Q80 135 90 140 Q100 135 110 142 Q100 148 90 145 Q80 148 70 142Z" fill="#2a3820"/>
+          <!-- Lapels -->
+          <path d="M70 142 Q76 155 82 168 Q90 155 82 140Z" fill="#2a3820"/>
+          <path d="M110 142 Q104 155 98 168 Q90 155 98 140Z" fill="#2a3820"/>
+          <!-- Gold buttons -->
+          <g fill="#ffd700">
+            <circle cx="90" cy="158" r="3"/>
+            <circle cx="90" cy="173" r="3"/>
+            <circle cx="90" cy="188" r="3"/>
+            <circle cx="90" cy="203" r="3"/>
+          </g>
+          <!-- Shoulder epaulettes -->
+          <rect x="50" y="140" width="18" height="8" rx="4" fill="#ffd700"/>
+          <rect x="112" y="140" width="18" height="8" rx="4" fill="#ffd700"/>
+          <!-- Sleeves -->
+          <path d="M54 144 Q38 156 32 178 Q28 194 34 200 Q44 202 50 194 Q54 178 58 158Z" fill="#3a4a2e"/>
+          <path d="M126 144 Q142 156 148 178 Q152 194 146 200 Q136 202 130 194 Q126 178 122 158Z" fill="#3a4a2e"/>
+          <!-- Sleeve cuffs gold -->
+          <path d="M34 198 Q42 204 50 200" stroke="#ffd700" stroke-width="3" fill="none"/>
+          <path d="M146 198 Q138 204 130 200" stroke="#ffd700" stroke-width="3" fill="none"/>
+          <!-- Skirt -->
+          <path d="M48 258 Q44 280 44 310 Q44 340 48 365 Q68 374 90 375 Q112 374 132 365 Q136 340 136 310 Q136 280 132 258 Q112 268 90 270 Q68 268 48 258Z" fill="#3a4a2e"/>
+          <!-- Belt -->
+          <rect x="52" y="256" width="76" height="10" rx="4" fill="#ffd700"/>
+          <!-- Belt buckle star -->
+          <polygon points="90,258 92,263 97,263 93,266 95,271 90,268 85,271 87,266 83,263 88,263" fill="#c8202a"/>
+        </g>
+
+        <!-- RUSSIAN 3: Kokoshnik traditional -->
+        <g class="cloth-layer" id="dress-ru3">
+          <!-- Traditional blouse -->
+          <path d="M60 148 Q56 168 56 190 Q64 200 90 202 Q116 200 124 190 Q124 168 120 148 Q106 143 90 143 Q74 143 60 148Z" fill="#f0e8d8"/>
+          <!-- Embroidery blouse -->
+          <g stroke="#c8202a" stroke-width="2" fill="none" opacity="0.9">
+            <path d="M68 155 Q90 150 112 155"/>
+            <path d="M66 165 Q90 160 114 165"/>
+            <path d="M65 175 Q90 170 115 175"/>
+            <path d="M66 185 Q90 180 114 185"/>
+          </g>
+          <!-- Sleeves decorated -->
+          <path d="M60 150 Q44 158 36 180 Q32 196 38 204 Q50 200 54 186 Q58 168 64 155Z" fill="#f0e8d8"/>
+          <path d="M120 150 Q136 158 144 180 Q148 196 142 204 Q130 200 126 186 Q122 168 116 155Z" fill="#f0e8d8"/>
+          <!-- Sleeve embroidery -->
+          <g stroke="#c8202a" stroke-width="1.5" fill="none">
+            <path d="M38 174 Q46 170 52 176"/>
+            <path d="M38 184 Q46 180 52 186"/>
+            <path d="M142 174 Q134 170 128 176"/>
+            <path d="M142 184 Q134 180 128 186"/>
+          </g>
+          <!-- Sarafan skirt (blue) -->
+          <path d="M58 198 Q50 220 48 255 Q46 295 48 340 Q64 355 90 358 Q116 355 132 340 Q134 295 132 255 Q130 220 122 198 Q106 206 90 206 Q74 206 58 198Z" fill="#1a40a0"/>
+          <!-- Skirt embroidery -->
+          <g fill="none" stroke="#ffd700" stroke-width="2" opacity="0.85">
+            <path d="M50 220 Q70 214 80 224 Q90 214 100 224 Q110 214 130 220"/>
+            <path d="M48 240 Q70 234 80 244 Q90 234 100 244 Q110 234 132 240"/>
+          </g>
+          <!-- Skirt bottom ornament -->
+          <path d="M48 336 Q68 350 90 354 Q112 350 132 336" stroke="#ffd700" stroke-width="3" fill="none"/>
+        </g>
+
+        <!-- ── HAIR LAYERS ── -->
+        <!-- Hair 1: Long wavy blonde -->
+        <g class="cloth-layer" id="hair-1">
+          <path d="M46 70 Q42 100 44 130 Q46 155 50 170 Q48 155 50 130 Q52 110 56 90Z" fill="#f0c040"/>
+          <path d="M134 70 Q138 100 136 130 Q134 155 130 170 Q132 155 130 130 Q128 110 124 90Z" fill="#f0c040"/>
+          <path d="M46 72 Q38 110 40 145 Q44 175 50 195 Q55 175 52 145 Q50 110 54 80Z" fill="#e8b830" opacity="0.7"/>
+          <path d="M134 72 Q142 110 140 145 Q136 175 130 195 Q125 175 128 145 Q130 110 126 80Z" fill="#e8b830" opacity="0.7"/>
+          <ellipse cx="90" cy="58" rx="46" ry="22" fill="#f0c040"/>
+          <path d="M46 62 Q50 44 70 38 Q90 34 110 38 Q130 44 134 62 Q116 56 90 54 Q64 56 46 62Z" fill="#e8b830"/>
+          <!-- Part line -->
+          <line x1="90" y1="36" x2="90" y2="58" stroke="#d4a020" stroke-width="1.5"/>
+        </g>
+
+        <!-- Hair 2: Short brunette bob -->
+        <g class="cloth-layer" id="hair-2">
+          <ellipse cx="90" cy="58" rx="46" ry="22" fill="#4a2c0a"/>
+          <path d="M44 70 Q40 90 42 108 Q44 118 50 122 Q48 108 48 90 Q50 78 54 70Z" fill="#4a2c0a"/>
+          <path d="M136 70 Q140 90 138 108 Q136 118 130 122 Q132 108 132 90 Q130 78 126 70Z" fill="#4a2c0a"/>
+          <path d="M44 72 Q42 95 44 110 Q60 120 90 122 Q120 120 136 110 Q138 95 136 72 Q116 78 90 80 Q64 78 44 72Z" fill="#4a2c0a"/>
+          <path d="M46 62 Q52 44 72 38 Q90 34 108 38 Q128 44 134 62 Q116 56 90 54 Q64 56 46 62Z" fill="#3a1e06"/>
+        </g>
+
+        <!-- Hair 3: High ponytail (black) -->
+        <g class="cloth-layer" id="hair-3">
+          <ellipse cx="90" cy="55" rx="46" ry="20" fill="#1a1020"/>
+          <path d="M46 64 Q42 80 44 95 Q50 100 60 100 Q58 86 50 72Z" fill="#1a1020"/>
+          <path d="M134 64 Q138 80 136 95 Q130 100 120 100 Q122 86 130 72Z" fill="#1a1020"/>
+          <!-- Ponytail -->
+          <path d="M82 38 Q85 20 88 10 Q90 0 92 10 Q95 20 98 38 Q94 34 90 36 Q86 34 82 38Z" fill="#1a1020"/>
+          <path d="M84 36 Q87 18 90 8 Q93 18 96 36 Q92 30 90 32 Q88 30 84 36Z" fill="#2a2030"/>
+          <!-- Hair tie -->
+          <ellipse cx="90" cy="38" rx="8" ry="4" fill="#f060a0"/>
+        </g>
+
+        <!-- Hair 4: Curly red -->
+        <g class="cloth-layer" id="hair-4">
+          <ellipse cx="90" cy="56" rx="50" ry="25" fill="#b03010"/>
+          <path d="M40 70 Q34 88 36 108 Q38 122 44 130 Q42 114 44 96 Q46 82 50 70Z" fill="#b03010"/>
+          <path d="M140 70 Q146 88 144 108 Q142 122 136 130 Q138 114 136 96 Q134 82 130 70Z" fill="#b03010"/>
+          <!-- Curls left -->
+          <path d="M38 90 Q30 98 32 108 Q36 116 42 112 Q46 106 42 98Z" fill="#c03818"/>
+          <path d="M36 112 Q28 122 32 132 Q38 140 44 134 Q48 126 42 118Z" fill="#c03818"/>
+          <!-- Curls right -->
+          <path d="M142 90 Q150 98 148 108 Q144 116 138 112 Q134 106 138 98Z" fill="#c03818"/>
+          <path d="M144 112 Q152 122 148 132 Q142 140 136 134 Q132 126 138 118Z" fill="#c03818"/>
+          <path d="M44 62 Q52 42 72 36 Q90 32 108 36 Q128 42 136 62 Q116 54 90 52 Q64 54 44 62Z" fill="#901e08"/>
+        </g>
+
+        <!-- ── JEWELRY LAYERS ── -->
+        <!-- Necklace 1: Pearl -->
+        <g class="cloth-layer" id="jewelry-necklace1">
+          <path d="M72 138 Q90 148 108 138" stroke="#e8e0d8" stroke-width="3" fill="none"/>
+          <g fill="#f0ece8">
+            <circle cx="72" cy="138" r="3"/>
+            <circle cx="78" cy="141" r="3"/>
+            <circle cx="84" cy="143" r="3"/>
+            <circle cx="90" cy="144" r="3.5"/>
+            <circle cx="96" cy="143" r="3"/>
+            <circle cx="102" cy="141" r="3"/>
+            <circle cx="108" cy="138" r="3"/>
+          </g>
+        </g>
+
+        <!-- Necklace 2: Gold chain -->
+        <g class="cloth-layer" id="jewelry-necklace2">
+          <path d="M72 138 Q90 150 108 138" stroke="#ffd700" stroke-width="2.5" fill="none"/>
+          <circle cx="90" cy="150" r="5" fill="#ffd700"/>
+          <circle cx="90" cy="150" r="3" fill="#ffec60"/>
+          <!-- Pendant -->
+          <polygon points="90,152 92,158 90,162 88,158" fill="#ffd700"/>
+        </g>
+
+        <!-- Earrings 1: Studs -->
+        <g class="cloth-layer" id="jewelry-earring1">
+          <circle cx="47" cy="92" r="4" fill="#f0c040"/>
+          <circle cx="47" cy="92" r="2" fill="#ffec80"/>
+          <circle cx="133" cy="92" r="4" fill="#f0c040"/>
+          <circle cx="133" cy="92" r="2" fill="#ffec80"/>
+        </g>
+
+        <!-- Earrings 2: Chandelier -->
+        <g class="cloth-layer" id="jewelry-earring2">
+          <line x1="47" y1="90" x2="47" y2="108" stroke="#ffd700" stroke-width="1.5"/>
+          <circle cx="47" cy="90" r="3" fill="#ffd700"/>
+          <ellipse cx="47" cy="110" rx="5" ry="7" fill="#ffd700" opacity="0.9"/>
+          <line x1="133" y1="90" x2="133" y2="108" stroke="#ffd700" stroke-width="1.5"/>
+          <circle cx="133" cy="90" r="3" fill="#ffd700"/>
+          <ellipse cx="133" cy="110" rx="5" ry="7" fill="#ffd700" opacity="0.9"/>
+        </g>
+
+        <!-- Bangle/Bracelet -->
+        <g class="cloth-layer" id="jewelry-bracelet">
+          <ellipse cx="42" cy="238" rx="9" ry="4" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+          <ellipse cx="138" cy="238" rx="9" ry="4" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+          <ellipse cx="42" cy="234" rx="9" ry="4" fill="none" stroke="#e090c0" stroke-width="2"/>
+          <ellipse cx="138" cy="234" rx="9" ry="4" fill="none" stroke="#e090c0" stroke-width="2"/>
+        </g>
+
+        <!-- Tiara -->
+        <g class="cloth-layer" id="jewelry-tiara">
+          <path d="M58 54 Q68 40 78 48 Q84 36 90 44 Q96 36 102 48 Q112 40 122 54" stroke="#ffd700" stroke-width="2.5" fill="none"/>
+          <circle cx="90" cy="44" r="4" fill="#ff80c0"/>
+          <circle cx="78" cy="48" r="3" fill="#ffd700"/>
+          <circle cx="102" cy="48" r="3" fill="#ffd700"/>
+          <circle cx="68" cy="52" r="2" fill="#ffd700"/>
+          <circle cx="112" cy="52" r="2" fill="#ffd700"/>
+        </g>
+
+        <!-- ── MAKEUP LAYERS ── -->
+        <!-- Eyeshadow pink -->
+        <g class="cloth-layer" id="makeup-eyeshadow1">
+          <ellipse cx="75" cy="80" rx="12" ry="7" fill="#e060a0" opacity="0.45"/>
+          <ellipse cx="105" cy="80" rx="12" ry="7" fill="#e060a0" opacity="0.45"/>
+        </g>
+
+        <!-- Eyeshadow blue/smoky -->
+        <g class="cloth-layer" id="makeup-eyeshadow2">
+          <ellipse cx="75" cy="80" rx="13" ry="8" fill="#4040c0" opacity="0.4"/>
+          <ellipse cx="105" cy="80" rx="13" ry="8" fill="#4040c0" opacity="0.4"/>
+          <ellipse cx="75" cy="82" rx="10" ry="5" fill="#2020a0" opacity="0.3"/>
+          <ellipse cx="105" cy="82" rx="10" ry="5" fill="#2020a0" opacity="0.3"/>
+        </g>
+
+        <!-- Eyeliner bold -->
+        <g class="cloth-layer" id="makeup-eyeliner">
+          <path d="M64 80 Q75 74 86 80 Q88 82 92 80" stroke="#1a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M94 80 Q105 74 116 80 Q118 82 122 80" stroke="#1a0a0a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- Lipstick red -->
+        <g class="cloth-layer" id="makeup-lips-red">
+          <path d="M78 114 Q84 110 90 112 Q96 110 102 114 Q96 122 90 124 Q84 122 78 114Z" fill="#cc0020"/>
+          <path d="M78 114 Q84 116 90 114 Q96 116 102 114" stroke="#aa0010" stroke-width="1.2" fill="none"/>
+        </g>
+
+        <!-- Lipstick pink -->
+        <g class="cloth-layer" id="makeup-lips-pink">
+          <path d="M78 114 Q84 110 90 112 Q96 110 102 114 Q96 122 90 124 Q84 122 78 114Z" fill="#f070a0"/>
+          <path d="M78 114 Q84 116 90 114 Q96 116 102 114" stroke="#d04080" stroke-width="1.2" fill="none"/>
+        </g>
+
+        <!-- Blush -->
+        <g class="cloth-layer" id="makeup-blush">
+          <ellipse cx="62" cy="100" rx="12" ry="8" fill="#ff8090" opacity="0.55"/>
+          <ellipse cx="118" cy="100" rx="12" ry="8" fill="#ff8090" opacity="0.55"/>
+        </g>
+
+        <!-- Highlighter -->
+        <g class="cloth-layer" id="makeup-highlight">
+          <ellipse cx="90" cy="74" rx="6" ry="3" fill="#fffce0" opacity="0.6"/>
+          <ellipse cx="75" cy="78" rx="4" ry="2" fill="#fffce0" opacity="0.5"/>
+          <ellipse cx="105" cy="78" rx="4" ry="2" fill="#fffce0" opacity="0.5"/>
+        </g>
+
+        <!-- ── SHOES ── -->
+        <!-- Heels pink -->
+        <g class="cloth-layer" id="shoes-heels">
+          <!-- Left -->
+          <path d="M46 388 Q44 396 44 402 Q48 408 62 408 Q74 406 76 398 Q76 392 72 390Z" fill="#f060a0"/>
+          <path d="M46 400 L44 412" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
+          <!-- Right -->
+          <path d="M134 388 Q136 396 136 402 Q132 408 118 408 Q106 406 104 398 Q104 392 108 390Z" fill="#f060a0"/>
+          <path d="M134 400 L136 412" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
+        </g>
+
+        <!-- Boots -->
+        <g class="cloth-layer" id="shoes-boots">
+          <!-- Left -->
+          <path d="M50 340 Q46 360 46 380 Q46 395 48 404 Q56 410 68 410 Q78 408 80 398 Q80 380 78 360 Q76 345 74 336Z" fill="#3a2010"/>
+          <!-- Right -->
+          <path d="M130 340 Q134 360 134 380 Q134 395 132 404 Q124 410 112 410 Q102 408 100 398 Q100 380 102 360 Q104 345 106 336Z" fill="#3a2010"/>
+          <!-- Boot tops -->
+          <path d="M50 340 Q62 336 74 340" stroke="#2a1008" stroke-width="2" fill="none"/>
+          <path d="M130 340 Q118 336 106 340" stroke="#2a1008" stroke-width="2" fill="none"/>
+        </g>
+
+        <!-- Kokoshnik headdress (Russian) -->
+        <g class="cloth-layer" id="acc-kokoshnik">
+          <path d="M44 58 Q50 20 70 10 Q90 2 110 10 Q130 20 136 58 Q116 50 90 48 Q64 50 44 58Z" fill="#c8202a"/>
+          <path d="M48 58 Q56 26 72 16 Q90 8 108 16 Q124 26 132 58 Q114 52 90 50 Q66 52 48 58Z" fill="#1a40a0"/>
+          <!-- Gold ornaments -->
+          <g fill="#ffd700">
+            <circle cx="90" cy="14" r="5"/>
+            <circle cx="72" cy="22" r="4"/>
+            <circle cx="108" cy="22" r="4"/>
+            <circle cx="60" cy="36" r="3"/>
+            <circle cx="120" cy="36" r="3"/>
+          </g>
+          <path d="M48 58 Q68 46 90 44 Q112 46 132 58" stroke="#ffd700" stroke-width="2" fill="none"/>
+        </g>
+
+        <!-- Pakistani Dupatta head -->
+        <g class="cloth-layer" id="acc-dupatta-head">
+          <path d="M44 56 Q50 40 70 34 Q90 30 110 34 Q130 40 136 56 Q116 50 90 48 Q64 50 44 56Z" fill="#e84090" opacity="0.85"/>
+          <path d="M44 58 Q36 72 34 90 Q36 88 44 80 Q48 70 50 62Z" fill="#e84090" opacity="0.8"/>
+          <path d="M136 58 Q144 72 146 90 Q144 88 136 80 Q132 70 130 62Z" fill="#e84090" opacity="0.8"/>
+          <!-- Dupatta border -->
+          <path d="M44 58 Q90 50 136 58" stroke="#ffd700" stroke-width="1.5" fill="none"/>
+        </g>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: Jewelry, Makeup, Shoes, Accessories -->
+  <div class="right-panel">
+
+    <div class="panel-card">
+      <h3>Jewelry</h3>
+      <div class="item-grid" id="jewelry-grid"></div>
+    </div>
+
+    <div class="panel-card">
+      <h3>Makeup</h3>
+      <div class="item-grid" id="makeup-grid"></div>
+    </div>
+
+    <div class="panel-card">
+      <h3>Shoes &amp; Acc</h3>
+      <div class="item-grid" id="shoes-grid"></div>
+    </div>
+
+    <div class="panel-card">
+      <div class="action-btns">
+        <button class="btn-reset" onclick="resetAll()">Reset</button>
+        <button class="btn-save" onclick="saveOutfit()">Save</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+
+const SKIN_TONES = {
+  'light':       { color: '#FDDBB4', highlight: '#FEEECE', shadow: '#e8c090' },
+  'medium-light':{ color: '#F5C599', highlight: '#FDDDB0', shadow: '#d4a070' },
+  'medium':      { color: '#D4956A', highlight: '#E8AA80', shadow: '#b07048' },
+  'medium-dark': { color: '#A0674B', highlight: '#B87A5C', shadow: '#804030' },
+  'dark':        { color: '#6B3A2A', highlight: '#7D4A38', shadow: '#502818' },
+  'deep':        { color: '#3D1F10', highlight: '#4E2A18', shadow: '#2C1008' },
+};
+
+const DRESSES = {
+  pakistani: [
+    { id: 'pk1', icon: '🌸', label: 'Lehenga' },
+    { id: 'pk2', icon: '🦚', label: 'Shalwar\nKameez' },
+    { id: 'pk3', icon: '🌺', label: 'Saree\nStyle' },
+  ],
+  american: [
+    { id: 'us1', icon: '🎀', label: 'Red Party\nDress' },
+    { id: 'us2', icon: '⭐', label: 'Jeans &\nCrop Top' },
+    { id: 'us3', icon: '👑', label: 'White\nGown' },
+  ],
+  russian: [
+    { id: 'ru1', icon: '🪆', label: 'Folk\nSarafan' },
+    { id: 'ru2', icon: '🎖️', label: 'Military\nCoat' },
+    { id: 'ru3', icon: '❄️', label: 'Kokoshnik\nTrad.' },
+  ],
+};
+
+const HAIR_ITEMS = [
+  { id: '1', icon: '👱‍♀️', label: 'Long\nBlonde' },
+  { id: '2', icon: '💇‍♀️', label: 'Short\nBrunette' },
+  { id: '3', icon: '🖤', label: 'High\nPonytail' },
+  { id: '4', icon: '🦰', label: 'Curly\nRed' },
+];
+
+const JEWELRY_ITEMS = [
+  { id: 'necklace1', icon: '📿', label: 'Pearls' },
+  { id: 'necklace2', icon: '✨', label: 'Gold\nChain' },
+  { id: 'earring1',  icon: '💛', label: 'Gold\nStuds' },
+  { id: 'earring2',  icon: '💎', label: 'Chandelier' },
+  { id: 'bracelet',  icon: '💍', label: 'Bangles' },
+  { id: 'tiara',     icon: '👸', label: 'Tiara' },
+];
+
+const MAKEUP_ITEMS = [
+  { id: 'eyeshadow1', icon: '🩷', label: 'Pink\nShadow' },
+  { id: 'eyeshadow2', icon: '💜', label: 'Smoky\nEye' },
+  { id: 'eyeliner',   icon: '🖊️', label: 'Eyeliner' },
+  { id: 'lips-red',   icon: '💋', label: 'Red\nLipstick' },
+  { id: 'lips-pink',  icon: '🌸', label: 'Pink\nLips' },
+  { id: 'blush',      icon: '🌷', label: 'Blush' },
+  { id: 'highlight',  icon: '🌟', label: 'Highlight' },
+];
+
+const SHOES_ITEMS = [
+  { id: 'heels',      icon: '👠', label: 'Pink\nHeels' },
+  { id: 'boots',      icon: '👢', label: 'Leather\nBoots' },
+  { id: 'kokoshnik',  icon: '🎭', label: 'Kokoshnik\n(Russian)' },
+  { id: 'dupatta-head',icon:'🧕',label: 'Dupatta\n(Pakistani)' },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  skin: 'light',
+  dressCat: 'pakistani',
+  dress: null,
+  hair: null,
+  jewelry: new Set(),
+  makeup: new Set(),
+  shoes: new Set(),
+};
+
+// ─── RENDER GRIDS ────────────────────────────────────────────────────────────
+
+function renderGrid(containerId, items, type, multiSelect = false) {
+  const grid = document.getElementById(containerId);
+  grid.innerHTML = '';
+  items.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'item-btn';
+    btn.dataset.id = item.id;
+    btn.dataset.type = type;
+    btn.innerHTML = `<span class="icon">${item.icon}</span><span class="label">${item.label}</span>`;
+    btn.addEventListener('click', () => toggleItem(btn, type, item.id, multiSelect));
+    grid.appendChild(btn);
+  });
+}
+
+function renderDressGrid() {
+  renderGrid('dress-grid', DRESSES[state.dressCat], 'dress', false);
+  // Re-highlight active dress if still applicable
+  highlightActive('dress-grid', state.dress ? [state.dress] : []);
+}
+
+function highlightActive(gridId, activeIds) {
+  document.querySelectorAll(`#${gridId} .item-btn`).forEach(btn => {
+    btn.classList.toggle('active', activeIds.includes(btn.dataset.id));
+  });
+}
+
+// ─── TOGGLE LOGIC ─────────────────────────────────────────────────────────────
+
+function toggleItem(btn, type, id, multi) {
+  if (type === 'dress') {
+    if (state.dress === id) {
+      state.dress = null;
+      btn.classList.remove('active');
+    } else {
+      // Clear old dress
+      if (state.dress) {
+        const old = document.querySelector(`#dress-grid .item-btn[data-id="${state.dress}"]`);
+        if (old) old.classList.remove('active');
+        setLayerVisible('dress-' + state.dress, false);
+      }
+      state.dress = id;
+      btn.classList.add('active');
+    }
+    setLayerVisible('dress-' + id, state.dress === id);
+  } else if (type === 'hair') {
+    if (state.hair === id) {
+      state.hair = null;
+      btn.classList.remove('active');
+      setLayerVisible('hair-' + id, false);
+    } else {
+      if (state.hair) {
+        const old = document.querySelector(`#hair-grid .item-btn[data-id="${state.hair}"]`);
+        if (old) old.classList.remove('active');
+        setLayerVisible('hair-' + state.hair, false);
+      }
+      state.hair = id;
+      btn.classList.add('active');
+      setLayerVisible('hair-' + id, true);
+    }
+  } else if (type === 'jewelry') {
+    toggleSet(state.jewelry, id, btn, 'jewelry-');
+  } else if (type === 'makeup') {
+    toggleSet(state.makeup, id, btn, 'makeup-');
+  } else if (type === 'shoes') {
+    toggleSet(state.shoes, id, btn, 'shoes-', ['heels', 'boots']);
+    // Also handle accessories
+    if (id === 'kokoshnik' || id === 'dupatta-head') {
+      if (state.shoes.has(id)) {
+        setLayerVisible('acc-' + id, true);
+      } else {
+        setLayerVisible('acc-' + id, false);
+      }
+      return;
+    }
+  }
+}
+
+function toggleSet(set, id, btn, prefix, exclusive = null) {
+  if (set.has(id)) {
+    set.delete(id);
+    btn.classList.remove('active');
+    setLayerVisible(prefix + id, false);
+  } else {
+    if (exclusive) {
+      // Only one of the exclusive group
+      exclusive.forEach(excId => {
+        if (set.has(excId)) {
+          set.delete(excId);
+          const old = document.querySelector(`[data-id="${excId}"]`);
+          if (old) old.classList.remove('active');
+          setLayerVisible(prefix + excId, false);
+        }
+      });
+    }
+    set.add(id);
+    btn.classList.add('active');
+    setLayerVisible(prefix + id, true);
+  }
+}
+
+function setLayerVisible(id, visible) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('visible', visible);
+}
+
+// ─── SKIN TONE ────────────────────────────────────────────────────────────────
+
+function applySkin(key) {
+  const tone = SKIN_TONES[key];
+  const root = document.documentElement;
+  // Use CSS custom properties on the SVG's root
+  const svg = document.getElementById('barbie-svg');
+  svg.style.setProperty('--skin-color', tone.color);
+  svg.style.setProperty('--skin-highlight', tone.highlight);
+  svg.style.setProperty('--skin-shadow', tone.shadow);
+  state.skin = key;
+
+  document.querySelectorAll('.skin-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.skin === key);
+  });
+}
+
+// ─── DRESS CATEGORY TABS ──────────────────────────────────────────────────────
+
+document.querySelectorAll('[data-dress-cat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Hide current dress
+    if (state.dress) {
+      setLayerVisible('dress-' + state.dress, false);
+      state.dress = null;
+    }
+    state.dressCat = btn.dataset.dressCat;
+    document.querySelectorAll('[data-dress-cat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDressGrid();
+  });
+});
+
+// ─── SKIN SWATCHES ───────────────────────────────────────────────────────────
+
+document.querySelectorAll('.skin-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => applySkin(swatch.dataset.skin));
+});
+
+// ─── RESET / SAVE ────────────────────────────────────────────────────────────
+
+function resetAll() {
+  // Hide all layers
+  document.querySelectorAll('.cloth-layer').forEach(el => el.classList.remove('visible'));
+  state.dress = null;
+  state.hair = null;
+  state.jewelry = new Set();
+  state.makeup = new Set();
+  state.shoes = new Set();
+  // Reset buttons
+  document.querySelectorAll('.item-btn').forEach(btn => btn.classList.remove('active'));
+  applySkin('light');
+}
+
+function saveOutfit() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 320; canvas.height = 500;
+  const ctx = canvas.getContext('2d');
+  const svg = document.getElementById('barbie-svg');
+  const xml = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([xml], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 320, 500);
+    URL.revokeObjectURL(url);
+    const link = document.createElement('a');
+    link.download = 'barbie-outfit.png';
+    link.href = canvas.toDataURL();
+    link.click();
+  };
+  img.src = url;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+renderDressGrid();
+renderGrid('hair-grid', HAIR_ITEMS, 'hair', false);
+renderGrid('jewelry-grid', JEWELRY_ITEMS, 'jewelry', true);
+renderGrid('makeup-grid', MAKEUP_ITEMS, 'makeup', true);
+renderGrid('shoes-grid', SHOES_ITEMS, 'shoes', true);
+applySkin('light');
+</script>
+</body>
+</html>
