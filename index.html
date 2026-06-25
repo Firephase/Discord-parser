@@ -547,12 +547,16 @@ h1{color:#fff;text-shadow:0 2px 12px #c060a0;font-size:2rem;margin:14px 0 10px;l
 
   <!-- ══ SHOES / ACCESSORIES ══ -->
 
-  <!-- Pink stilettos -->
+  <!-- Pink stilettos (left toe→left, right toe→right; spike at heel) -->
   <g class="L" id="sh-stiletto">
-    <path d="M58 416 Q54 424 52 432 Q56 438 68 438 Q80 436 82 428 Q82 422 78 418Z" fill="#f060a0"/>
-    <path d="M56 428 L52 444" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
-    <path d="M132 416 Q136 424 138 432 Q134 438 122 438 Q110 436 108 428 Q108 422 112 418Z" fill="#f060a0"/>
-    <path d="M134 428 L138 444" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
+    <!-- left shoe: toe points left (low x), heel on right -->
+    <path d="M58 418 Q54 425 52 432 Q55 439 67 440 Q79 438 84 430 Q84 422 80 418Z" fill="#f060a0"/>
+    <!-- left heel spike at right side -->
+    <line x1="82" y1="430" x2="84" y2="448" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
+    <!-- right shoe: toe points right (high x), heel on left -->
+    <path d="M132 418 Q136 425 138 432 Q135 439 123 440 Q111 438 106 430 Q106 422 110 418Z" fill="#f060a0"/>
+    <!-- right heel spike at left side -->
+    <line x1="108" y1="430" x2="106" y2="448" stroke="#f060a0" stroke-width="4" stroke-linecap="round"/>
   </g>
 
   <!-- Knee-high boots -->
@@ -732,10 +736,25 @@ function resetAll(){
 
 function saveSVG(){
   const sv=document.getElementById('sv');
-  const xml=new XMLSerializer().serializeToString(sv);
-  const blob=new Blob([xml],{type:'image/svg+xml'});
+  // Resolve actual skin color values
+  const sc=sv.style.getPropertyValue('--sc')||'#FDDBB4';
+  const sh=sv.style.getPropertyValue('--sh')||'#FEEECE';
+  const sdc=sv.style.getPropertyValue('--sdc')||'#c89060';
+  // Serialize and replace CSS variables with real values
+  let xml=new XMLSerializer().serializeToString(sv);
+  xml=xml.replace(/var\(--sc,[^)]*\)/g,sc).replace(/var\(--sc\)/g,sc);
+  xml=xml.replace(/var\(--sh,[^)]*\)/g,sh).replace(/var\(--sh\)/g,sh);
+  xml=xml.replace(/var\(--sdc,[^)]*\)/g,sdc).replace(/var\(--sdc\)/g,sdc);
+  // Parse, remove hidden layers, strip helper classes
+  const doc=new DOMParser().parseFromString(xml,'image/svg+xml');
+  doc.querySelectorAll('.L').forEach(el=>{
+    if(!el.classList.contains('on')) el.remove();
+    else { el.removeAttribute('class'); }
+  });
+  const finalXml=new XMLSerializer().serializeToString(doc.documentElement);
+  const blob=new Blob([finalXml],{type:'image/svg+xml'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='barbie.svg';a.click();
+  const a=document.createElement('a');a.href=url;a.download='barbie-outfit.svg';a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 </script>
